@@ -6,4 +6,5 @@ public interface IPlayerCharacterRepo
 {
     Task<PlayerCharacter> GetPlayer(string nickname);
     Task<PlayerCharacter> SavePlayer(PlayerCharacter player);
+    Task<bool> IsValidPlayerName(string rawCommand);
 }

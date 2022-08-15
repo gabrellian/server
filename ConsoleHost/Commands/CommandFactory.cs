@@ -18,7 +18,7 @@ public class CommandFactory : ICommandFactory
     }
     public virtual Dictionary<Regex, Type> Matchers { get; } = new Dictionary<Regex, Type>()
     {
-        { new Regex(@"login\s(?<Username>.*)\s(?<Password>.*)"), typeof(LoginCommand) }
+        { new Regex(@"who$"), typeof(WhoCommand) }
     };
 
     public bool Match(string commandString, GameSession session)

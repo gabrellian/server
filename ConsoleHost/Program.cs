@@ -14,13 +14,14 @@ var config = new ConfigurationBuilder()
 var services = new ServiceCollection();
 services.AddSingleton<IConfiguration>(config);
 services.AddSingleton<ICommandFactory, CommandFactory>();
-services.AddSingleton<IPlayerCharacterRepo , FileSystem.PlayerCharacterRepo>();
+services.AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>();
 
-services.AddScoped<LoginCommand>();
+services.AddScoped<WhoCommand>();
 
 var provider = services.BuildServiceProvider();
 
 var server = new GameServer(System.Net.IPAddress.Any, 3000, provider);
+
 
 server.Start();
 
