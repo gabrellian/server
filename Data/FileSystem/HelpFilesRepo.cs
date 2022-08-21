@@ -8,9 +8,10 @@ public class HelpFilesRepo : FileSystemRepo<string, string>, IHelpFilesRepo
     public override string ModelStoragePath => Path.Combine(RootStoragePath, "HelpFiles");
     protected override string Deserialize(string raw) => raw;
     protected override string Serialize(string model) => model;
-    protected override string GetFileName(string path, string data)
-        => $"{path.Replace(" ","-")}.txt";
+    protected override string GetFileExtension() => "txt";
+    protected override string GetFileName(string path)
+        => $"{path.Replace(" ","/")}.{GetFileExtension()}";
 
     public async Task<string> GetHelpPage(string path)
-        => await Get(GetFileName(path, null));
+        => await Get(path.Replace(" ", "/"));
 }

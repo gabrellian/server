@@ -31,7 +31,8 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
     }
 
     protected virtual TKey GetNextKey() => throw new NotImplementedException();
-    protected virtual string GetFileName(TKey id, TModel data) => $"{id}.json";
+    protected virtual string GetFileName(TKey id) => $"{id}.{GetFileExtension()}";
+    protected virtual string GetFileExtension() => "json";
 
     private void Initialize()
     {
@@ -41,7 +42,7 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
 
     public async Task<TModel> Get(TKey id)
     {
-        var recordFile = Path.Combine(ModelStoragePath, id.ToString());
+        var recordFile = Path.Combine(ModelStoragePath, GetFileName(id));
         if (File.Exists(recordFile))
         {
             var raw = await File.ReadAllTextAsync(recordFile);
@@ -52,7 +53,8 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
 
     public Task<TModel> Get(Func<TModel, bool> expression)
     {
-        foreach (var file in Directory.GetFiles(ModelStoragePath))
+        string[] files = GetAllFiles();
+        foreach (var file in files)
         {
             var record = Deserialize(File.ReadAllText(file));
             if (expression(record))
@@ -63,10 +65,18 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
         return Task.FromResult<TModel>(null);
     }
 
+    private string[] GetAllFiles()
+    {
+        return Directory.GetFiles(ModelStoragePath, $"*.{GetFileExtension()}", new EnumerationOptions()
+        {
+            RecurseSubdirectories = true
+        });
+    }
+
     public Task<IEnumerable<TModel>> Where(Func<TModel, bool> expression)
     {
         List<TModel> results = new List<TModel>();
-        foreach (var file in Directory.GetFiles(ModelStoragePath))
+        foreach (var file in GetAllFiles())
         {
             var record = Deserialize(File.ReadAllText(file));
             if (expression(record))
@@ -84,10 +94,11 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
         if (uniqueId == null)
         {
             uniqueId = GetNextKey();
-            _keyProperty.SetValue(data, uniqueId);
+            if (_keyProperty != null) 
+                _keyProperty.SetValue(data, uniqueId);
         }
 
-        var recordFile = Path.Combine(ModelStoragePath, GetFileName((TKey)uniqueId, data));
+        var recordFile = Path.Combine(ModelStoragePath, GetFileName((TKey)uniqueId));
 
         await File.WriteAllTextAsync(recordFile, Serialize(data));
 
