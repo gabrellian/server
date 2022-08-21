@@ -6,6 +6,7 @@ using Engine.Commands;
 using Data.Models;
 using Engine.Utils;
 using Engine.StateMachines;
+using Spectre.Console.Rendering;
 
 namespace Engine.Net;
 public delegate Microsoft.Extensions.DependencyInjection.IServiceCollection SessionInitializer(Engine.Net.GameSession session);
@@ -27,6 +28,7 @@ public class GameSession : TcpSession
 
     public T GetService<T>() => _services.GetService<T>();
     public void SendLine(string msg = "") => Send(msg + "\r\n");
+    public void SendLine(IRenderable msg) => Send(msg.ToAnsi() + "\r\n");
 
     protected override void OnConnected()
     {
@@ -50,7 +52,6 @@ public class GameSession : TcpSession
                     break;
                 case 13:
                     var cmd = Encoding.UTF8.GetString(_buffer.ToArray()).TrimEnd().TrimStart();
-                    SendLine();
                     foreach (var sc in StatefulContexts)
                     {
                         sc.OnCommand(cmd).Wait();
@@ -69,10 +70,19 @@ public class GameSession : TcpSession
             }
     }
 
+    public virtual void SendPrompt() => Send("> ");
+
     protected void ProcessCommand(string raw)
     {
-        _services.GetService<ICommandFactory>().Match(raw, this);
+        if (_services.GetService<ICommandFactory>().Match(raw, this))
+        {
+            if (CurrentPlayfield != null)
+            {
+                SendPrompt();
+            }
+        }
         _buffer.Clear();
+
     }
 
     public void AttachPlayer(PlayerCharacter player)

@@ -3,6 +3,8 @@ using Engine.Net;
 using Engine.Utils;
 using Data;
 using Data.Models;
+using Spectre.Console;
+using Microsoft.Extensions.Configuration;
 
 namespace Engine.StateMachines;
 
@@ -11,10 +13,10 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
 {
     private IPlayfieldService _playfields;
 
-    public SM_MainMenu(GameSession session, IPlayfieldService playfields) : base(session)
+    public SM_MainMenu(GameSession session, IPlayfieldService playfields, IConfiguration config) : base(session)
     {
         _playfields = playfields;
-        _state = new Unauthenticated(session);
+        _state = new Unauthenticated(config, session);
     }
 
     // Initial state - not logged into a specific character
@@ -24,15 +26,16 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
         private Regex _matchExit = new Regex(@"exit$");
         private Regex _matchCreate = new Regex(@"(new|create|start)$");
 
-        public Unauthenticated(GameSession session) : base(session)
+        public Unauthenticated(IConfiguration config, GameSession session) : base(session)
         {
-            session.SendLine("");
-            session.SendLine($"Welcome!");
-            session.SendLine($"--------");
-            session.SendLine($"login    Log into an existing character");
-            session.SendLine($"create   Log into an existing character");
-            session.SendLine($"exit     Disconnect");
-            session.SendLine($"");
+            session.SendLine(new FigletText(config.GetValue<string>("ServerDisplayName", "Welcome")).ToAnsi());
+            session.SendLine(
+                new Table().HideHeaders().AddColumns("", "Description")
+                .AddRow("login", "Log into an existing character")
+                .AddRow("create", "Create a new character")
+                .AddRow("exit", "Create a new character")
+                .ToAnsi()
+            );
             session.Send($"Enter a command to get started: ");
         }
 
@@ -77,7 +80,7 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
 
                 _session.DetachPlayer();
 
-                return new Unauthenticated(_session);
+                return new Unauthenticated(_session.GetService<IConfiguration>(), _session);
             }
             return this;
         }

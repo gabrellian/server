@@ -18,12 +18,12 @@ public class WhoCommand : BaseCommand
     public override async Task Handle()
     {
         Table tbl = new Table();
-        tbl.AddColumn("Player");
-        tbl.AddColumn("Playfield");
-        tbl.AddColumn("Room");
-        tbl.AddColumn("Status");
+        tbl.AddColumn("[b]Player[/]");
+        tbl.AddColumn("[b]Playfield[/]");
+        tbl.AddColumn("[b]Room[/]");
+        tbl.AddColumn("[b]Status[/]");
 
-        Session.SendLine($"Players Online:");
+        Session.SendLine($"[b]Players Online:[/]".ToAnsi());
         foreach (GameSession playerSession in _playfieldService.Players)
         {
             tbl.AddRow(new [] {
@@ -32,9 +32,7 @@ public class WhoCommand : BaseCommand
                 playerSession.CurrentRoom.DisplayName,
                 "[green]ONLINE[/]"
             });
-            //Session.SendLine($"  - {playerSession.CurrentPlayer.Nickname} [{playerSession.CurrentRoom.DisplayName}]");
         }
-        var ansi = Spectre.Console.Advanced.AnsiConsoleExtensions.ToAnsi(AnsiConsole.Console, tbl);
-        Session.SendLine(ansi);
+        Session.SendLine(tbl);
     }
 }

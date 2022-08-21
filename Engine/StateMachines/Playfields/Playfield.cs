@@ -201,6 +201,6 @@ public class Room
         _players.Add(pc);
 
         pc.SendLine(FullDescription);
-
+        pc.SendPrompt();
     }
 }

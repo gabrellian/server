@@ -14,8 +14,11 @@ public class CharacterCommand : BaseCommand
 
     public override async Task Handle()
     {
-
-        Session.SendLine($"Character Profile");
-        Session.SendLine($"  - Name:   {Session.CurrentPlayer.Nickname}");
+        Session.SendLine($"[b]Character Profile:[/]".ToAnsi());
+        Session.SendLine(new Table()
+            .AddColumns("Stat", "Value")
+            .AddRow("Name", Session.CurrentPlayer.Nickname)
+            .AddEmptyRow()
+            .AddRow("Location", $"{Session.CurrentPlayfield.DisplayName} - {Session.CurrentRoom.DisplayName}"));
     }
 }

@@ -57,6 +57,7 @@ public class CommandFactory : ICommandFactory
                 }
 
                 command.Handle();
+                return true;
             }
         }
         return false;
