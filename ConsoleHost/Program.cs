@@ -6,25 +6,33 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Json;
 using Engine;
+using Microsoft.Extensions.Hosting;
+using Engine.StateMachines;
 
-var config = new ConfigurationBuilder()
-    .AddJsonFile("server.json", true)
-    .AddEnvironmentVariables()
+var host = Host.CreateDefaultBuilder()
+    .ConfigureAppConfiguration((ctx, config) => config
+        .AddEnvironmentVariables())
+    .Listen(System.Net.IPAddress.Any, 3000)
+    .ConfigureServices((ctx, services) => services
+        .AddSingleton<ICommandFactory, CommandFactory>()
+        .AddSingleton<IPlayfieldService, PlayfieldService>()
+        .AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>()
+        .AddScoped<WhoCommand>()
+        .AddSingleton<SessionInitializer>(serverServices =>
+            (session) => new ServiceCollection()
+                .AddSingleton(session)
+                .AddSingleton<IPlayfieldService>(serverServices.GetService<IPlayfieldService>())
+                .AddSingleton<IMainMenu, SM_MainMenu>()
+                .AddSingleton(serverServices.GetService<IConfiguration>())
+                .AddSingleton<ICommandFactory, CommandFactory>()
+                .AddSingleton<WhoCommand>()
+                .AddSingleton<HelpCommand>()
+                .AddSingleton<CharacterCommand>()
+                .AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>()
+        )
+        .AddHostedService<GameServerHost>())
     .Build();
 
-var services = new ServiceCollection();
-services.AddSingleton<IConfiguration>(config);
-services.AddSingleton<ICommandFactory, CommandFactory>();
-services.AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>();
-
-services.AddScoped<WhoCommand>();
-
-var provider = services.BuildServiceProvider();
-
-var server = new GameServer(System.Net.IPAddress.Any, 3000, provider);
-
-
-server.Start();
-
+await host.StartAsync();
 Console.WriteLine("[CTRL-C] To Exit Server");
-while (true) ;
+await host.WaitForShutdownAsync();

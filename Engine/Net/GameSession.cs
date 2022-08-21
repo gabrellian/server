@@ -8,26 +8,35 @@ using Engine.Utils;
 using Engine.StateMachines;
 
 namespace Engine.Net;
-
+public delegate Microsoft.Extensions.DependencyInjection.IServiceCollection SessionInitializer(Engine.Net.GameSession session);
 public class GameSession : TcpSession
 {
     private List<byte> _buffer = new List<byte>();
-    private IServiceScope _scopedServices;
+    private IServiceProvider _services;
     public PlayerCharacter CurrentPlayer { get; private set; }
-    public List<StatefulContext> StatefulContexts { get; set; } = new List<StatefulContext>();
-    public GameSession(TcpServer server, IServiceScope scope) : base(server)
-    {
-        _scopedServices = scope;
-    }
+    public List<IStatefulContext> StatefulContexts { get; set; } = new List<IStatefulContext>();
+    private GameServer _server => _server as GameServer;
 
-    public T GetService<T>() => _scopedServices.ServiceProvider.GetService<T>();
-    public void SendLine(string msg) => Send(msg + "\r\n");
-    public bool SendLineAsync(string msg) => SendAsync(msg + "\r\n");
+    public Room CurrentRoom { get; private set; }
+    public Playfield CurrentPlayfield { get; private set; }
+
+    public GameSession(TcpServer server) : base(server)
+    {
+    }
+    public void RegisterServiceProvider(IServiceProvider provider) => _services = provider;
+
+    public T GetService<T>() => _services.GetService<T>();
+    public void SendLine(string msg = "") => Send(msg + "\r\n");
 
     protected override void OnConnected()
     {
-        StatefulContexts.Add(new SM_MainMenu(this));
+        StatefulContexts.Add(_services.GetService<IMainMenu>());
         base.OnConnected();
+    }
+    public virtual async Task OnTick(TimeSpan delta)
+    {
+        // Pass commands onto PF/Room specific logic and 
+        foreach (var ctx in StatefulContexts) await ctx.OnTick(delta);
     }
 
     protected override void OnReceived(byte[] inbound, long offset, long size)
@@ -40,11 +49,13 @@ public class GameSession : TcpSession
                     Disconnect();
                     break;
                 case 13:
+                    var cmd = Encoding.UTF8.GetString(_buffer.ToArray()).TrimEnd().TrimStart();
+                    SendLine();
                     foreach (var sc in StatefulContexts)
                     {
-                        sc.SetState(sc.CurrentState.OnCommand(Encoding.UTF8.GetString(_buffer.ToArray()).TrimEnd().TrimStart()).Result);
+                        sc.OnCommand(cmd).Wait();
                     }
-                    ProcessCommand(Encoding.UTF8.GetString(_buffer.ToArray()));
+                    ProcessCommand(cmd);
                     break;
                 case 32:
                     _buffer.Add(b);
@@ -60,7 +71,7 @@ public class GameSession : TcpSession
 
     protected void ProcessCommand(string raw)
     {
-        _scopedServices.ServiceProvider.GetService<ICommandFactory>().Match(raw, this);
+        _services.GetService<ICommandFactory>().Match(raw, this);
         _buffer.Clear();
     }
 
@@ -72,6 +83,14 @@ public class GameSession : TcpSession
     protected override void OnError(SocketError error)
     {
         Console.WriteLine($"Session caught an error with code {error}");
+    }
+
+    public async Task ChangeRoom(string path)
+    {
+        var (pf, rm) = await _services.GetService<IPlayfieldService>().GetRoom(path);
+        CurrentRoom = rm;
+        CurrentPlayfield = pf;
+        await rm.AddPlayer(this);
     }
 
     public void DetachPlayer()

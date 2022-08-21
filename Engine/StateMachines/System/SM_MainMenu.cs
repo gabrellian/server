@@ -6,10 +6,14 @@ using Data.Models;
 
 namespace Engine.StateMachines;
 
-public class SM_MainMenu : StatefulContext
+public interface IMainMenu : IStatefulContext { }
+public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
 {
-    public SM_MainMenu(GameSession session) : base(session)
+    private IPlayfieldService _playfields;
+
+    public SM_MainMenu(GameSession session, IPlayfieldService playfields) : base(session)
     {
+        _playfields = playfields;
         _state = new Unauthenticated(session);
     }
 
@@ -36,17 +40,17 @@ public class SM_MainMenu : StatefulContext
         {
             if (_matchLogin.IsMatch(rawCommand))
             {
-                return new LoggingIn(_session);
+                return await Task.FromResult(new LoggingIn(_session));
             }
             else if (_matchCreate.IsMatch(rawCommand))
             {
-                return new Creating_Name(_session, new PlayerCharacter()) as IState;
+                return await Task.FromResult(new Creating_Name(_session, new PlayerCharacter()) as IState);
             }
             else if (_matchExit.IsMatch(rawCommand))
             {
                 _session.Disconnect();
             }
-            return this as IState;
+            return await Task.FromResult(this as IState);
         }
     }
 
@@ -54,13 +58,17 @@ public class SM_MainMenu : StatefulContext
     private class Authenticated : BaseState
     {
         private PlayerCharacter _pc;
+        private IPlayfieldService _playfields;
 
-        public Authenticated(GameSession session, PlayerCharacter pc) : base(session)
+        public Authenticated(GameSession session, IPlayfieldService playfields, PlayerCharacter pc) : base(session)
         {
             _pc = pc;
+            _playfields = playfields;
             _session.AttachPlayer(_pc);
             session.SendLine($"Hello '{_pc.Nickname}', you are now signed in..");
+            _session.ChangeRoom("/albrecht/apartment-bedroom").Wait();
         }
+        
         public async override Task<IState> OnCommand(string rawCommand)
         {
             if (rawCommand.Equals("logout", StringComparison.OrdinalIgnoreCase))
@@ -101,7 +109,7 @@ public class SM_MainMenu : StatefulContext
                 return this;
             }
 
-            return new Authenticated(_session, pc);
+            return new Authenticated(_session, _session.GetService<IPlayfieldService>(), pc);
         }
     }
 
@@ -137,7 +145,7 @@ public class SM_MainMenu : StatefulContext
 
             _pc = await pcRepo.SavePlayer(_pc);
 
-            return new Authenticated(_session, _pc);
+            return new Authenticated(_session, _session.GetService<IPlayfieldService>(), _pc);
         }
     }
 
