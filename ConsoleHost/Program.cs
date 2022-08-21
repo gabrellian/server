@@ -16,6 +16,7 @@ var host = Host.CreateDefaultBuilder()
     .ConfigureServices((ctx, services) => services
         .AddSingleton<ICommandFactory, CommandFactory>()
         .AddSingleton<IPlayfieldService, PlayfieldService>()
+        .AddSingleton<IHelpFilesRepo, FileSystem.HelpFilesRepo>()
         .AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>()
         .AddScoped<WhoCommand>()
         .AddSingleton<SessionInitializer>(serverServices =>
@@ -28,7 +29,8 @@ var host = Host.CreateDefaultBuilder()
                 .AddSingleton<WhoCommand>()
                 .AddSingleton<HelpCommand>()
                 .AddSingleton<CharacterCommand>()
-                .AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>()
+                .AddSingleton<IPlayerCharacterRepo>(serverServices.GetService<IPlayerCharacterRepo>())
+                .AddSingleton<IHelpFilesRepo>(serverServices.GetService<IHelpFilesRepo>())
         )
         .AddHostedService<GameServerHost>())
     .Build();

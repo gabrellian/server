@@ -18,9 +18,9 @@ public class CommandFactory : ICommandFactory
     }
     public virtual Dictionary<Regex, Type> Matchers { get; } = new Dictionary<Regex, Type>()
     {
-        { new Regex(@"who$"), typeof(WhoCommand) },
-        { new Regex(@"(help|h)$"), typeof(HelpCommand) },
-        { new Regex(@"(character|c)$"), typeof(CharacterCommand) }
+        { new Regex(@"^who$"), typeof(WhoCommand) },
+        { new Regex(@"^(help|h)"), typeof(HelpCommand) },
+        { new Regex(@"^(character|c)$"), typeof(CharacterCommand) }
     };
 
     public bool Match(string commandString, GameSession session)
@@ -34,7 +34,7 @@ public class CommandFactory : ICommandFactory
             if (matches.Count > 0)
             {
                 var command = _services.GetService(commandType) as BaseCommand;
-
+                command.RawCommand = commandString;
                 command.Session = session;
 
                 foreach (Match match in matches)

@@ -8,21 +8,30 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Data.FileSystem;
-
-public abstract class FileSystemRepo<TModel,TKey> where TModel : class
+public abstract class FileSystemRepo<TModel, TKey> where TModel : class
 {
     private PropertyInfo _keyProperty;
     public string RootStoragePath { get; set; }
-    public string ModelStoragePath => Path.Combine(RootStoragePath, typeof(TModel).Name);
+    public virtual string ModelStoragePath => Path.Combine(RootStoragePath, typeof(TModel).Name);
     public FileSystemRepo(IConfiguration config)
     {
         RootStoragePath = config.GetValue<string>(nameof(RootStoragePath), "./_data");
-        _keyProperty = typeof(TModel).GetProperty("Id");
-        if (_keyProperty == null) throw new ArgumentException($"Property 'Id' is missing from {typeof(TModel).Name}");
         Initialize();
+    }
+    protected virtual string Serialize(TModel model)
+    {
+        return JsonSerializer.Serialize(model);
+    }
+    protected virtual TModel Deserialize(string raw)
+    {
+        return JsonSerializer.Deserialize(raw, typeof(TModel), new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        }) as TModel;
     }
 
     protected virtual TKey GetNextKey() => throw new NotImplementedException();
+    protected virtual string GetFileName(TKey id, TModel data) => $"{id}.json";
 
     private void Initialize()
     {
@@ -36,7 +45,7 @@ public abstract class FileSystemRepo<TModel,TKey> where TModel : class
         if (File.Exists(recordFile))
         {
             var raw = await File.ReadAllTextAsync(recordFile);
-            return JsonSerializer.Deserialize(raw, typeof(TModel)) as TModel;
+            return Deserialize(raw);
         }
         return null;
     }
@@ -45,7 +54,7 @@ public abstract class FileSystemRepo<TModel,TKey> where TModel : class
     {
         foreach (var file in Directory.GetFiles(ModelStoragePath))
         {
-            var record = JsonSerializer.Deserialize(File.ReadAllText(file), typeof(TModel)) as TModel;
+            var record = Deserialize(File.ReadAllText(file));
             if (expression(record))
             {
                 return Task.FromResult(record);
@@ -59,7 +68,7 @@ public abstract class FileSystemRepo<TModel,TKey> where TModel : class
         List<TModel> results = new List<TModel>();
         foreach (var file in Directory.GetFiles(ModelStoragePath))
         {
-            var record = JsonSerializer.Deserialize(File.ReadAllText(file), typeof(TModel)) as TModel;
+            var record = Deserialize(File.ReadAllText(file));
             if (expression(record))
             {
                 results.Add(record);
@@ -70,7 +79,7 @@ public abstract class FileSystemRepo<TModel,TKey> where TModel : class
 
     public async Task<TModel> Save(TModel data)
     {
-        var uniqueId = _keyProperty.GetValue(data);
+        var uniqueId = _keyProperty?.GetValue(data);
 
         if (uniqueId == null)
         {
@@ -78,12 +87,9 @@ public abstract class FileSystemRepo<TModel,TKey> where TModel : class
             _keyProperty.SetValue(data, uniqueId);
         }
 
-        var recordFile = Path.Combine(ModelStoragePath, uniqueId.ToString());
+        var recordFile = Path.Combine(ModelStoragePath, GetFileName((TKey)uniqueId, data));
 
-        await File.WriteAllTextAsync(recordFile, JsonSerializer.Serialize(data, typeof(TModel), new JsonSerializerOptions()
-        {
-            WriteIndented = true
-        }));
+        await File.WriteAllTextAsync(recordFile, Serialize(data));
 
         return data;
     }
