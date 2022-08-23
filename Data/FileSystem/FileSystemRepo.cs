@@ -20,7 +20,10 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
     }
     protected virtual string Serialize(TModel model)
     {
-        return JsonSerializer.Serialize(model);
+        return JsonSerializer.Serialize(model, new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        });
     }
     protected virtual TModel Deserialize(string raw)
     {

@@ -1,0 +1,45 @@
+{
+  "UniqueId": "albrecht",
+  "DisplayName": "The Albrecht",
+  "Rooms": [
+    {
+      "UniqueId": "apartment-bedroom",
+      "DisplayName": "Apartment - Bedroom",
+      "ShortDescription": "A dissheveled bedroom",
+      "FullDescription": "A dimly lit dissheveled bedroom about 8 feet by 10 feet in size. The walls stand warily plastered with a vintage art deco wallpaper that\u0027s begun to peel along the walls edges. The full sized bed in the center of the room is unmade and looks to have been slept in. The green shag carpet is stained and worn from what one would assume is many years of use and abuse. A room lamp is placed on an ornate but worn wooden end table, casting dim shadows across the room.",
+      "Aliases": [
+        "bedroom"
+      ],
+      "RoomLinks": [
+        {
+          "MatchPattern": "(leave|exit|x|w)$",
+          "UniqueId": "exit",
+          "LinkedRoomId": "/albrecht/apartment-livingroom",
+          "DisplayName": "Door",
+          "FullDescription": null,
+          "ShortDescription": "A standard door"
+        }
+      ]
+    },
+    {
+      "UniqueId": "apartment-livingroom",
+      "DisplayName": "Apartment - Main Room",
+      "ShortDescription": "An ordinary living room and kitchenette.",
+      "FullDescription": "An ordinary living room and kitchenette. A worn leather couch is placed in the center of the living room, stained and misshapen from years of use. Along the rear wall a computer terminal sits with it\u0027s dim green terminal screen illuminating the room. The kitchenette is dated with old and rusted appliances, not often used and even less often cleaned.",
+      "Aliases": [
+        "living room",
+        "kitchen"
+      ],
+      "RoomLinks": [
+        {
+          "MatchPattern": "(east|e)$",
+          "UniqueId": "bedroom-door",
+          "LinkedRoomId": "/albrecht/apartment-bedroom",
+          "DisplayName": "Door",
+          "FullDescription": null,
+          "ShortDescription": "A standard door"
+        }
+      ]
+    }
+  ]
+}
