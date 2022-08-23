@@ -78,7 +78,7 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
             {
                 _session.SendLine($"Goodbye!");
 
-                _session.DetachPlayer();
+                await _session.DetachPlayer();
 
                 return new Unauthenticated(_session.GetService<IConfiguration>(), _session);
             }

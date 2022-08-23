@@ -37,7 +37,7 @@ public class GameServerHost : IHostedService
 }
 public class GameServer : TcpServer
 {
-    private List<Playfield> _playfields = new List<Playfield>();
+    private List<PlayfieldInstance> _playfields = new List<PlayfieldInstance>();
     private IServiceProvider _serverServices;
 
     public GameServer(IPAddress address, int port, IServiceProvider serverServices) : base(address, port)

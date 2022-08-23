@@ -26,4 +26,6 @@ public class PlayerCharacterRepo : FileSystemRepo<PlayerCharacter, string>, IPla
     public Task<PlayerCharacter> SavePlayer(PlayerCharacter player) => Save(player);
 
     protected override string GetNextKey() => Guid.NewGuid().ToString();
+    protected override string GetKey(PlayerCharacter data) => data.Id;
+    protected override void SetKey(PlayerCharacter pc, string key) { pc.Id = key; }
 }

@@ -9,7 +9,7 @@ public class CharacterCommand : BaseCommand
 
     public CharacterCommand()
     {
-        
+
     }
 
     public override async Task Handle()
@@ -19,6 +19,7 @@ public class CharacterCommand : BaseCommand
             .AddColumns("Stat", "Value")
             .AddRow("Name", Session.CurrentPlayer.Nickname)
             .AddEmptyRow()
-            .AddRow("Location", $"{Session.CurrentPlayfield.DisplayName} - {Session.CurrentRoom.DisplayName}"));
+            .AddRow("Location", $"{Session.CurrentPlayfield.DisplayName} - {Session.CurrentRoom.DisplayName}")
+            , showPrompt: true);
     }
 }

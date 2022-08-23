@@ -33,6 +33,6 @@ public class WhoCommand : BaseCommand
                 "[green]ONLINE[/]"
             });
         }
-        Session.SendLine(tbl);
+        Session.SendLine(tbl, showPrompt: true);
     }
 }

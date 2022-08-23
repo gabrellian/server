@@ -8,12 +8,13 @@ using Engine.Utils;
 public interface IPlayfieldService
 {
     Task Initialize();
-    Task<(Playfield Playfield, Room Room)> GetRoom(string path);
+    Task<(PlayfieldInstance Playfield, RoomInstance Room)> GetRoom(string path);
     IReadOnlyList<GameSession> Players { get; }
 }
 public class PlayfieldService : IPlayfieldService
 {
-    private List<Playfield> _playfields = new List<Playfield>();
+    private List<PlayfieldInstance> _playfields = new List<PlayfieldInstance>();
+    private IPlayfieldDefinitionRepo _pfRepo;
     private Task _eventLoopTask;
 
     public IReadOnlyList<GameSession> Players
@@ -32,8 +33,9 @@ public class PlayfieldService : IPlayfieldService
         }
     }
 
-    public PlayfieldService()
+    public PlayfieldService(IPlayfieldDefinitionRepo pfRepo)
     {
+        _pfRepo = pfRepo;
         _eventLoopTask = new Task(async () => await EventLoop(), TaskCreationOptions.LongRunning);
     }
 
@@ -52,7 +54,7 @@ public class PlayfieldService : IPlayfieldService
         }
     }
 
-    public Task<(Playfield Playfield, Room Room)> GetRoom(string path)
+    public Task<(PlayfieldInstance Playfield, RoomInstance Room)> GetRoom(string path)
     {
         string pfId = path.Split('/').Skip(1).FirstOrDefault();
         string rmId = path.Split('/').Skip(2).FirstOrDefault();
@@ -123,18 +125,20 @@ public class PlayfieldService : IPlayfieldService
         }
         ";
 
-        _playfields.Add(JsonSerializer.Deserialize<Playfield>(tempPF));
+        var def = JsonSerializer.Deserialize<PlayfieldDefinition>(tempPF);
+        await _pfRepo.SavePlayfieldDefinition(def);
+        _playfields.Add(new PlayfieldInstance(def));
 
         await Task.CompletedTask;
     }
 
 }
-public class Playfield
+public class PlayfieldInstance
 {
     #region Public Properties
-    [JsonInclude] public string UniqueId { get; private set; }
-    [JsonInclude] public string DisplayName { get; private set; }
-    [JsonInclude] public IEnumerable<Room> Rooms { get; private set; } = new List<Room>();
+    public string UniqueId { get; private set; }
+    public string DisplayName { get; private set; }
+    public IEnumerable<RoomInstance> Rooms { get; private set; } = new List<RoomInstance>();
     #endregion
 
     #region Private/Protected Properties
@@ -142,7 +146,12 @@ public class Playfield
     #endregion
 
     #region Public Public Interface
-    public Playfield() { }
+    public PlayfieldInstance(PlayfieldDefinition def)
+    {
+        DisplayName = def.DisplayName;
+        UniqueId = def.UniqueId;
+        Rooms = def.Rooms.Select(rd => new RoomInstance(rd)).ToList();
+    }
 
     public virtual async Task OnCommand(string rawCommand)
     {
@@ -158,30 +167,30 @@ public class Playfield
     }
     #endregion
 }
-public class RoomLink
+public class RoomInstance
 {
-    [JsonInclude] public string MatchPattern { get; private set; }
-    [JsonInclude] public string UniqueId { get; private set; }
-    [JsonInclude] public string LinkedRoomId { get; private set; }
-    [JsonInclude] public string DisplayName { get; private set; }
-    [JsonInclude] public string FullDescription { get; private set; }
-    [JsonInclude] public string ShortDescription { get; private set; }
-}
-public class Room
-{
-    [JsonInclude] public string UniqueId { get; private set; }
-    [JsonInclude] public string DisplayName { get; private set; }
-    [JsonInclude] public string ShortDescription { get; private set; }
-    [JsonInclude] public string FullDescription { get; private set; }
-    [JsonInclude] public IEnumerable<string> Aliases { get; private set; } = new List<string>();
-    [JsonInclude] public IEnumerable<RoomLink> RoomLinks { get; private set; } = new List<RoomLink>();
+    public string UniqueId { get; private set; }
+    public string DisplayName { get; private set; }
+    public string ShortDescription { get; private set; }
+    public string FullDescription { get; private set; }
+    public IEnumerable<string> Aliases { get; private set; } = new List<string>();
+    public IEnumerable<RoomLink> RoomLinks { get; private set; } = new List<RoomLink>();
 
-    [JsonIgnore] private List<GameSession> _players = new List<GameSession>();
-    [JsonIgnore] public IReadOnlyList<GameSession> Players => _players;
+    private List<GameSession> _players = new List<GameSession>();
+    public IReadOnlyList<GameSession> Players => _players;
 
     protected List<IStatefulContext> _contexts = new List<IStatefulContext>();
 
-    public Room() { }
+    public RoomInstance() { }
+    public RoomInstance(RoomDefinition def)
+    {
+        this.Aliases = def.Aliases;
+        this.DisplayName = def.DisplayName;
+        this.FullDescription = def.FullDescription;
+        this.ShortDescription = def.ShortDescription;
+        this.RoomLinks = def.RoomLinks;
+        this.UniqueId = def.UniqueId;
+    }
 
     public virtual async Task OnCommand(string rawCommand)
     {
@@ -200,7 +209,10 @@ public class Room
     {
         _players.Add(pc);
 
-        pc.SendLine(FullDescription);
-        pc.SendPrompt();
+        pc.SendLook();
+    }
+    public async Task RemovePlayer(GameSession pc)
+    {
+        _players.Remove(pc);
     }
 }

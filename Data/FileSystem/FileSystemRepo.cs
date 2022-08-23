@@ -31,6 +31,8 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
     }
 
     protected virtual TKey GetNextKey() => throw new NotImplementedException();
+    protected virtual TKey GetKey(TModel data) => throw new NotImplementedException();
+    protected virtual void SetKey(TModel data, TKey key) => throw new NotImplementedException();
     protected virtual string GetFileName(TKey id) => $"{id}.{GetFileExtension()}";
     protected virtual string GetFileExtension() => "json";
 
@@ -89,13 +91,12 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
 
     public async Task<TModel> Save(TModel data)
     {
-        var uniqueId = _keyProperty?.GetValue(data);
+        var uniqueId = GetKey(data);
 
         if (uniqueId == null)
         {
             uniqueId = GetNextKey();
-            if (_keyProperty != null) 
-                _keyProperty.SetValue(data, uniqueId);
+            SetKey(data, uniqueId);
         }
 
         var recordFile = Path.Combine(ModelStoragePath, GetFileName((TKey)uniqueId));

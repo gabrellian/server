@@ -7,6 +7,7 @@ using Data.Models;
 using Engine.Utils;
 using Engine.StateMachines;
 using Spectre.Console.Rendering;
+using Spectre.Console;
 
 namespace Engine.Net;
 public delegate Microsoft.Extensions.DependencyInjection.IServiceCollection SessionInitializer(Engine.Net.GameSession session);
@@ -18,8 +19,8 @@ public class GameSession : TcpSession
     public List<IStatefulContext> StatefulContexts { get; set; } = new List<IStatefulContext>();
     private GameServer _server => _server as GameServer;
 
-    public Room CurrentRoom { get; private set; }
-    public Playfield CurrentPlayfield { get; private set; }
+    public RoomInstance CurrentRoom { get; private set; }
+    public PlayfieldInstance CurrentPlayfield { get; private set; }
 
     public GameSession(TcpServer server) : base(server)
     {
@@ -27,13 +28,26 @@ public class GameSession : TcpSession
     public void RegisterServiceProvider(IServiceProvider provider) => _services = provider;
 
     public T GetService<T>() => _services.GetService<T>();
-    public void SendLine(string msg = "") => Send(msg + "\r\n");
-    public void SendLine(IRenderable msg) => Send(msg.ToAnsi() + "\r\n");
+    public void SendLine(string msg = "", bool showPrompt = false)
+    {
+        Send(msg + "\r\n");
+        if (showPrompt)
+        {
+            SendPrompt();
+        }
+    }
+    public void SendLine(IRenderable msg, bool showPrompt = false)
+        => Send(msg.ToAnsi() + "\r\n");
+
 
     protected override void OnConnected()
     {
         StatefulContexts.Add(_services.GetService<IMainMenu>());
         base.OnConnected();
+    }
+    protected override void OnDisconnected()
+    {
+        var _ = DetachPlayer();
     }
     public virtual async Task OnTick(TimeSpan delta)
     {
@@ -52,11 +66,14 @@ public class GameSession : TcpSession
                     break;
                 case 13:
                     var cmd = Encoding.UTF8.GetString(_buffer.ToArray()).TrimEnd().TrimStart();
-                    foreach (var sc in StatefulContexts)
+                    if (!string.IsNullOrEmpty(cmd))
                     {
-                        sc.OnCommand(cmd).Wait();
+                        foreach (var sc in StatefulContexts)
+                        {
+                            sc.OnCommand(cmd).Wait();
+                        }
+                        ProcessCommand(cmd);
                     }
-                    ProcessCommand(cmd);
                     break;
                 case 32:
                     _buffer.Add(b);
@@ -70,17 +87,20 @@ public class GameSession : TcpSession
             }
     }
 
-    public virtual void SendPrompt() => Send("> ");
+    public virtual void SendPrompt()
+    {
+        Send("> ");
+    }
 
     protected void ProcessCommand(string raw)
     {
-        if (_services.GetService<ICommandFactory>().Match(raw, this))
+        var cmd = _services.GetService<ICommandFactory>().Match(raw, this);
+
+        if (CurrentPlayfield != null)
         {
-            if (CurrentPlayfield != null)
-            {
-                SendPrompt();
-            }
+            SendPrompt();
         }
+
         _buffer.Clear();
 
     }
@@ -103,8 +123,16 @@ public class GameSession : TcpSession
         await rm.AddPlayer(this);
     }
 
-    public void DetachPlayer()
+    public async Task DetachPlayer()
     {
         CurrentPlayer = null;
+        await CurrentRoom.RemovePlayer(this);
+        CurrentRoom = null;
+        CurrentPlayfield = null;
     }
+
+    public void SendLook() =>
+        SendLine(new Table()
+            .AddColumn(CurrentRoom.DisplayName)
+            .AddRow(CurrentRoom.FullDescription), showPrompt: true);
 }
