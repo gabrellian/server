@@ -1,7 +1,7 @@
 using Engine.Net;
 using Microsoft.Extensions.Configuration;
 
-namespace Engine.Utils;
+namespace Engine.Core;
 
 public interface IState
 {

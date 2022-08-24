@@ -13,6 +13,8 @@ public class PlayfieldDefinitionRepo : FileSystemRepo<PlayfieldDefinition, strin
 
     public async Task<PlayfieldDefinition> GetPlayfieldDefinition(string path)
         => await Get(path);
-    public async Task<PlayfieldDefinition> SavePlayfieldDefinition(PlayfieldDefinition def) 
+    public async Task<PlayfieldDefinition> SavePlayfieldDefinition(PlayfieldDefinition def)
         => await Save(def);
+    public async Task<IEnumerable<PlayfieldDefinition>> GetPlayfieldDefinitions()
+        => await GetAll();
 }

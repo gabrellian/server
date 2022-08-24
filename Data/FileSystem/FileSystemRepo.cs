@@ -56,6 +56,16 @@ public abstract class FileSystemRepo<TModel, TKey> where TModel : class
         return null;
     }
 
+    public Task<IEnumerable<TModel>> GetAll()
+    {
+        List<TModel> results = new List<TModel>();
+        foreach (var file in GetAllFiles())
+        {
+            results.Add(Deserialize(File.ReadAllText(file)));
+        }
+        return Task.FromResult(results as IEnumerable<TModel>);
+    }
+
     public Task<TModel> Get(Func<TModel, bool> expression)
     {
         string[] files = GetAllFiles();

@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Data.Models;
 using Engine.Net;
-using Engine.Utils;
+using Engine.Core;
 
 public interface IPlayfieldService
 {
@@ -78,56 +78,12 @@ public class PlayfieldService : IPlayfieldService
     // Load up playfields
     public async Task Initialize()
     {
-        // TODO: Load from configuration the playfields that will be initially loaded
-        var tempPF = @"
-        {
-            ""UniqueId"": ""albrecht"",
-            ""DisplayName"": ""The Albrecht"",
-            ""Rooms"": [
-                {
-                    ""UniqueId"": ""apartment-bedroom"",
-                    ""DisplayName"": ""Apartment - Bedroom"",
-                    ""ShortDescription"": ""A dissheveled bedroom"",
-                    ""FullDescription"": ""A dimly lit dissheveled bedroom about 8 feet by 10 feet in size. The walls stand warily plastered with a vintage art deco wallpaper that's begun to peel along the walls edges. The full sized bed in the center of the room is unmade and looks to have been slept in. The green shag carpet is stained and worn from what one would assume is many years of use and abuse. A room lamp is placed on an ornate but worn wooden end table, casting dim shadows across the room."",
-                    ""Aliases"": [
-                        ""bedroom""
-                    ],
-                    ""RoomLinks"": [
-                        {
-                            ""UniqueId"": ""exit"",
-                            ""LinkedRoomId"": ""/albrecht/apartment-livingroom"",
-                            ""DisplayName"": ""Door"",
-                            ""ShortDescription"": ""A standard door"",
-                            ""MatchPattern"": ""(leave|exit|x|w)$""
-                        }
-                    ]
-                },
-                {
-                    ""UniqueId"": ""apartment-livingroom"",
-                    ""DisplayName"": ""Apartment - Main Room"",
-                    ""ShortDescription"": ""An ordinary living room and kitchenette."",
-                    ""FullDescription"": ""An ordinary living room and kitchenette. A worn leather couch is placed in the center of the living room, stained and misshapen from years of use. Along the rear wall a computer terminal sits with it's dim green terminal screen illuminating the room. The kitchenette is dated with old and rusted appliances, not often used and even less often cleaned."",
-                    ""Aliases"": [
-                        ""living room"",
-                        ""kitchen""
-                    ],
-                    ""RoomLinks"": [
-                        {
-                            ""UniqueId"": ""bedroom-door"",
-                            ""LinkedRoomId"": ""/albrecht/apartment-bedroom"",
-                            ""DisplayName"": ""Door"",
-                            ""ShortDescription"": ""A standard door"",
-                            ""MatchPattern"": ""(east|e)$""
-                        }
-                    ]
-                }
-            ]    
-        }
-        ";
+        _playfields.Clear();
 
-        var def = JsonSerializer.Deserialize<PlayfieldDefinition>(tempPF);
-        await _pfRepo.SavePlayfieldDefinition(def);
-        _playfields.Add(new PlayfieldInstance(def));
+        foreach (PlayfieldDefinition pfDef in await _pfRepo.GetPlayfieldDefinitions())
+        {
+            _playfields.Add(new PlayfieldInstance(pfDef));
+        }
 
         await Task.CompletedTask;
     }
