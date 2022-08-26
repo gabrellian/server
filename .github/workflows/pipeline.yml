@@ -35,7 +35,7 @@ jobs:
       if: success() || failure()        # run this step even if previous step failed
       with:
         name: test-results
-        path: ./Tests/test-results.trx
+        path: ./Tests/TestResults/test-results.trx
 
     - uses: dorny/test-reporter@v1
       with:
