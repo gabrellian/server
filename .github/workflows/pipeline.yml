@@ -1,0 +1,33 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+      
+    - name: Build Solution
+      run: dotnet build
+
+    - name: use this action, test solution dir
+      uses: zyborg/dotnet-tests-report@v1
+      with:
+        project_path: ./Tests
+        report_name: unit_tests
+        report_title: Unit Tests
+        github_token: ${{ secrets.GITHUB_TOKEN }}
