@@ -161,13 +161,13 @@ public class RoomInstance
         foreach (var player in _players) await player.OnTick(delta);
     }
 
-    public async Task AddPlayer(GameSession pc)
+    public virtual async Task AddPlayer(GameSession pc)
     {
         _players.Add(pc);
 
         pc.SendLook();
     }
-    public async Task RemovePlayer(GameSession pc)
+    public virtual async Task RemovePlayer(GameSession pc)
     {
         _players.Remove(pc);
     }

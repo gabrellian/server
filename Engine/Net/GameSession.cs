@@ -15,20 +15,20 @@ public class GameSession : TcpSession
 {
     private List<byte> _buffer = new List<byte>();
     private IServiceProvider _services;
-    public PlayerCharacter CurrentPlayer { get; private set; }
-    public List<IStatefulContext> StatefulContexts { get; set; } = new List<IStatefulContext>();
+    public virtual PlayerCharacter CurrentPlayer { get; private set; }
+    public virtual List<IStatefulContext> StatefulContexts { get; set; } = new List<IStatefulContext>();
     private GameServer _server => _server as GameServer;
 
-    public RoomInstance CurrentRoom { get; private set; }
-    public PlayfieldInstance CurrentPlayfield { get; private set; }
+    public virtual RoomInstance CurrentRoom { get; private set; }
+    public virtual PlayfieldInstance CurrentPlayfield { get; private set; }
 
     public GameSession(TcpServer server) : base(server)
     {
     }
     public void RegisterServiceProvider(IServiceProvider provider) => _services = provider;
 
-    public T GetService<T>() => _services.GetService<T>();
-    public void SendLine(string msg = "", bool showPrompt = false)
+    public virtual T GetService<T>() => _services.GetService<T>();
+    public virtual void SendLine(string msg = "", bool showPrompt = false)
     {
         Send(msg + "\r\n");
         if (showPrompt)
@@ -94,7 +94,7 @@ public class GameSession : TcpSession
 
     protected void ProcessCommand(string raw)
     {
-        var cmd = _services.GetService<ICommandFactory>().Match(raw, this);
+        var cmd = GetService<ICommandFactory>().Match(raw, this);
 
         if (CurrentPlayfield != null)
         {
@@ -105,7 +105,7 @@ public class GameSession : TcpSession
 
     }
 
-    public void AttachPlayer(PlayerCharacter player)
+    public virtual void AttachPlayer(PlayerCharacter player)
     {
         CurrentPlayer = player;
     }
@@ -115,15 +115,15 @@ public class GameSession : TcpSession
         Console.WriteLine($"Session caught an error with code {error}");
     }
 
-    public async Task ChangeRoom(string path)
+    public virtual async Task ChangeRoom(string path)
     {
-        var (pf, rm) = await _services.GetService<IPlayfieldService>().GetRoom(path);
+        var (pf, rm) = await GetService<IPlayfieldService>().GetRoom(path);
         CurrentRoom = rm;
         CurrentPlayfield = pf;
         await rm.AddPlayer(this);
     }
 
-    public async Task DetachPlayer()
+    public virtual async Task DetachPlayer()
     {
         CurrentPlayer = null;
         await CurrentRoom.RemovePlayer(this);
