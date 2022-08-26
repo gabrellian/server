@@ -21,18 +21,12 @@ jobs:
       with:
         dotnet-version: 6.0.x
       
-    - name: Build Data
-      run: dotnet build --no-restore
-      working-directory: ./Data
+    - name: Restore Packages
+      run: dotnet restore -s Server.sln
       
-    - name: Build Engine
-      run: dotnet build --no-restore
-      working-directory: ./Engine
-      
-    - name: Build Sample Server
-      run: dotnet build --no-restore
-      working-directory: ./SampleServer
-      
+    - name: Build Solution
+      run: dotnet build -s Server.sln --no-restore
+
     - name: Test
       run: dotnet test --no-build --verbosity normal
       working-directory: ./Tests
