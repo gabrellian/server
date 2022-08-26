@@ -21,25 +21,13 @@ jobs:
       with:
         dotnet-version: 6.0.x
       
-    #- name: Restore Packages
-    #  run: dotnet restore -s ./Server.sln
-      
     - name: Build Solution
       run: dotnet build
 
-    - name: Test
-      run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
-      working-directory: ./Tests
-
-    - uses: actions/upload-artifact@v2  # upload test results
-      if: success() || failure()        # run this step even if previous step failed
+    - name: use this action, test solution dir
+      uses: zyborg/dotnet-tests-report@v1
       with:
-        name: test-results
-        path: ./Tests/TestResults/test-results.trx
-
-    #- uses: dorny/test-reporter@v1
-    #  with:
-    #    artifact: test-results            # artifact name
-    #    name: Dotnet Tests                # Name of the check run which will be created
-    #    path: '*.trx'          # Path to test results (inside artifact .zip)
-    #    reporter: dotnet-trx              # Format of test results
+        project_path: ./Tests
+        report_name: unit_tests
+        report_title: Unit Tests
+        github_token: ${{ secrets.GITHUB_TOKEN }}
