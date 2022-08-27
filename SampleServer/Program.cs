@@ -37,7 +37,12 @@ var host = Host.CreateDefaultBuilder()
         )
         .AddHostedService<GameServerHost>())
     .Build();
-
-await host.StartAsync();
-Console.WriteLine("[CTRL-C] To Exit Server");
-await host.WaitForShutdownAsync();
+try
+{
+    await host.StartAsync();
+    Console.WriteLine("[CTRL-C] To Exit Server");
+    await host.WaitForShutdownAsync();
+}catch (Exception ex)
+{
+    Console.WriteLine(ex.ToString());
+}
