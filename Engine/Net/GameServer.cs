@@ -15,12 +15,13 @@ public class GameServerHost : IHostedService
     private GameServer _server;
     private IPlayfieldService _playfieldService;
 
-    public GameServerHost(IConfiguration config, IPlayfieldService playfieldService, IServiceProvider services)
+    public GameServerHost(IConfiguration config, IPlayfieldService playfieldService, IServiceProvider services, GameSessions sessions)
     {
         _server = new GameServer(
             IPAddress.Parse(config.GetValue<string>("ServerAddress")),
             config.GetValue<int>("ServerPort"),
-            services);
+            services,
+            sessions);
         _playfieldService = playfieldService;
     }
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -39,10 +40,14 @@ public class GameServer : TcpServer
 {
     private List<PlayfieldInstance> _playfields = new List<PlayfieldInstance>();
     private IServiceProvider _serverServices;
+    private GameSessions _sessions;
 
-    public GameServer(IPAddress address, int port, IServiceProvider serverServices) : base(address, port)
+    public virtual IEnumerable<GameSession> GameSessions => this.Sessions.Select(s => s.Value as GameSession);
+
+    public GameServer(IPAddress address, int port, IServiceProvider serverServices, GameSessions sessions) : base(address, port)
     {
         _serverServices = serverServices;
+        _sessions = sessions;
     }
 
     protected override TcpSession CreateSession()
@@ -50,6 +55,8 @@ public class GameServer : TcpServer
         var session = new GameSession(this);
         
         session.RegisterServiceProvider(_serverServices.GetService<SessionInitializer>().Invoke(session).BuildServiceProvider());
+        
+        _sessions.Add(session);
 
         return session;
     }

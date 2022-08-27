@@ -18,6 +18,7 @@ var host = Host.CreateDefaultBuilder()
         .AddSingleton<IPlayfieldService, PlayfieldService>()
         .AddSingleton<IPlayfieldDefinitionRepo, FileSystem.PlayfieldDefinitionRepo>()
         .AddSingleton<IHelpFilesRepo, FileSystem.HelpFileRepo>()
+        .AddSingleton<GameSessions>()
         .AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>()
         .AddScoped<WhoCommand>()
         .AddSingleton<SessionInitializer>(serverServices =>
@@ -27,6 +28,7 @@ var host = Host.CreateDefaultBuilder()
                 .AddSingleton<IMainMenu, SM_MainMenu>()
                 .AddSingleton(serverServices.GetService<IConfiguration>())
                 .AddSingleton<ICommandFactory, CommandFactory>()
+                .AddSingleton<GameSessions>(serverServices.GetService<GameSessions>())
                 .AddTransient<WhoCommand>()
                 .AddTransient<HelpCommand>()
                 .AddTransient<LookCommand>()
@@ -40,7 +42,7 @@ var host = Host.CreateDefaultBuilder()
 try
 {
     await host.StartAsync();
-    Console.WriteLine("[CTRL-C] To Exit Server");
+    Console.WriteLine("[CTRL-C] To Exit Serrver");
     await host.WaitForShutdownAsync();
 }catch (Exception ex)
 {

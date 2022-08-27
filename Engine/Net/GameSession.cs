@@ -10,7 +10,10 @@ using Spectre.Console.Rendering;
 using Spectre.Console;
 
 namespace Engine.Net;
-public delegate Microsoft.Extensions.DependencyInjection.IServiceCollection SessionInitializer(Engine.Net.GameSession session);
+public delegate IServiceCollection SessionInitializer(GameSession session);
+public class GameSessions : List<GameSession> {
+    public virtual IEnumerable<GameSession> ActiveSessions => this.Where(s => s.CurrentPlayer != null && s.CurrentRoom != null);
+}
 public class GameSession : TcpSession
 {
     private List<byte> _buffer = new List<byte>();
@@ -126,7 +129,10 @@ public class GameSession : TcpSession
     public virtual async Task DetachPlayer()
     {
         CurrentPlayer = null;
-        await CurrentRoom.RemovePlayer(this);
+        if (CurrentRoom != null)
+        {
+            await CurrentRoom.RemovePlayer(this);
+        }
         CurrentRoom = null;
         CurrentPlayfield = null;
     }

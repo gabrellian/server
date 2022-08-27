@@ -102,6 +102,7 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
         public async override Task<IState> OnCommand(string rawCommand)
         {
             var pcRepo = _session.GetService<IPlayerCharacterRepo>();
+            var sessions = _session.GetService<GameSessions>();
 
             var pc = await pcRepo.GetPlayer(rawCommand);
 
@@ -110,6 +111,12 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
                 _session.SendLine($"Unknown character '{rawCommand}'");
                 SendPrompt();
                 return this;
+            }
+
+            if (sessions.ActiveSessions.Any(s => s.CurrentPlayer.Nickname.Equals(rawCommand, StringComparison.OrdinalIgnoreCase)))
+            {
+                _session.SendLine($"Already signed in to '{rawCommand}'");
+                return new Unauthenticated(_session.GetService<IConfiguration>(), _session);
             }
 
             return new Authenticated(_session, _session.GetService<IPlayfieldService>(), pc);
