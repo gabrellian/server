@@ -69,8 +69,8 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     - run: |
-        az container create --resource-group gabrellian \     
-          --name gabrellian-sample-server \ 
+        az container create --resource-group gabrellian \
+          --name gabrellian-sample-server \
           --image gabrellian.azurecr.io/gabrellian/server:${{ github.sha }} \
           --dns-name-label gabrellian-sample-server \
           --ports 3000 \
