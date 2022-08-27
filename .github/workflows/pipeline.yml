@@ -78,4 +78,6 @@ jobs:
           --azure-file-volume-account-key ${{secrets.SAMPLE_SERVER_STORAGE_KEY}} \
           --azure-file-volume-share-name ${{secrets.ACI_PERS_SHARE_NAME}} \
           --azure-file-volume-mount-path /aci/data/ \
+          --registry-username gabrellian
+          --registry-password ${{secrets.REGISTRY_PASSWORD}}
           --environment-variables 'RootStoragePath'='/aci/data'
