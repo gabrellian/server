@@ -104,22 +104,29 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
             var pcRepo = _session.GetService<IPlayerCharacterRepo>();
             var sessions = _session.GetService<GameSessions>();
 
-            var pc = await pcRepo.GetPlayer(rawCommand);
-
-            if (pc == null)
+            if (rawCommand.Equals("exit", StringComparison.OrdinalIgnoreCase))
             {
-                _session.SendLine($"Unknown character '{rawCommand}'");
-                SendPrompt();
-                return this;
-            }
-
-            if (sessions.ActiveSessions.Any(s => s.CurrentPlayer.Nickname.Equals(rawCommand, StringComparison.OrdinalIgnoreCase)))
-            {
-                _session.SendLine($"Already signed in to '{rawCommand}'");
                 return new Unauthenticated(_session.GetService<IConfiguration>(), _session);
             }
+            else
+            {
+                var pc = await pcRepo.GetPlayer(rawCommand);
 
-            return new Authenticated(_session, _session.GetService<IPlayfieldService>(), pc);
+                if (pc == null)
+                {
+                    _session.SendLine($"Unknown character '{rawCommand}'");
+                    SendPrompt();
+                    return this;
+                }
+
+                if (sessions.ActiveSessions.Any(s => s.CurrentPlayer.Nickname.Equals(rawCommand, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _session.SendLine($"Already signed in to '{rawCommand}'");
+                    return new Unauthenticated(_session.GetService<IConfiguration>(), _session);
+                }
+
+                return new Authenticated(_session, _session.GetService<IPlayfieldService>(), pc);
+            }
         }
     }
 
@@ -143,8 +150,11 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
         {
             // Check to see if name is taken .. if not then proceed
             var pcRepo = _session.GetService<IPlayerCharacterRepo>();
-
-            if (!await pcRepo.IsValidPlayerName(rawCommand))
+            if (rawCommand.Equals("exit", StringComparison.OrdinalIgnoreCase))
+            {
+                return new Unauthenticated(_session.GetService<IConfiguration>(), _session);
+            }
+            else if (!await pcRepo.IsValidPlayerName(rawCommand))
             {
                 _session.SendLine($"The name '{rawCommand}' is not a valid name.");
                 SendPrompt();

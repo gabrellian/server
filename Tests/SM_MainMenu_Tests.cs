@@ -41,7 +41,11 @@ public class SM_MainMenu_Tests
         await menu.OnCommand("create");
 
         Assert.AreEqual("Creating_Name", menu.CurrentState.GetType().Name, "Should transition to char creation name selection");
+        await menu.OnCommand("exit");
 
+        Assert.AreEqual("Unauthenticated", menu.CurrentState.GetType().Name, "Should transition back to main menu when exiting Creating_Name");
+
+        await menu.OnCommand("create");
         await menu.OnCommand(name);
 
         session.Verify(s => s.ChangeRoom(It.IsAny<string>()), Times.Once, "Should change rooms on login");
@@ -54,6 +58,9 @@ public class SM_MainMenu_Tests
         await menu.OnCommand("login");
 
         Assert.AreEqual("LoggingIn", menu.CurrentState.GetType().Name, "Should transition to logging in state");
+        
+        await menu.OnCommand("exit");
+        Assert.AreEqual("Unauthenticated", menu.CurrentState.GetType().Name, "Should transition back to main menu when exiting Logging_In");
     }
 
     [TestMethod]
