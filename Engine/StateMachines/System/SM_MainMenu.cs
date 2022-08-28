@@ -30,7 +30,7 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
         {
             session.SendLine(new FigletText(config.GetValue<string>("ServerDisplayName", "Welcome")).ToAnsi());
             var version = config.GetValue<string>("VersionHash", null);
-            if (version != null) session.SendLine($"[underline]Version[/]: {version}");
+            if (version != null) session.SendLine($"[underline]Version[/]: {version.Substring(0,7)}".ToAnsi());
             session.SendLine(
                 new Table().HideHeaders().AddColumns("", "Description")
                 .AddRow("login", "Log into an existing character")
