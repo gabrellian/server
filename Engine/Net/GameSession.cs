@@ -92,7 +92,7 @@ public class GameSession : TcpSession
 
     public virtual void SendPrompt()
     {
-        Send($"({CurrentPlayer.Nickname}): ");
+        Send($"> ");
     }
 
     protected async Task ProcessCommand(string raw)
