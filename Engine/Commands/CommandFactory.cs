@@ -21,6 +21,7 @@ public class CommandFactory : ICommandFactory
         { new Regex(@"^who$"), typeof(WhoCommand) },
         { new Regex(@"^(look|l)$"), typeof(LookCommand) },
         { new Regex(@"^(help|h)"), typeof(HelpCommand) },
+        { new Regex(@"^(say|sl|global|sg)"), typeof(SayCommand) },
         { new Regex(@"^(character|c)$"), typeof(CharacterCommand) }
     };
 
