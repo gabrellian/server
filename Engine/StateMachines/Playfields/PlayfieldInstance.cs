@@ -161,14 +161,26 @@ public class RoomInstance
         foreach (var player in _players) await player.OnTick(delta);
     }
 
-    public virtual async Task AddPlayer(GameSession pc)
+    public virtual Task AddPlayer(GameSession pc)
     {
+        foreach (var p in _players)
+        {
+            p.SendLine($"[cyan]{p.CurrentPlayer.Nickname}[/] approaches.".ToAnsi());
+        }
         _players.Add(pc);
 
         pc.SendLook();
+        return Task.CompletedTask;
     }
-    public virtual async Task RemovePlayer(GameSession pc)
+    public virtual Task RemovePlayer(GameSession pc)
     {
         _players.Remove(pc);
+        foreach (var p in _players)
+        {
+            p.SendLine($"[cyan]{p.CurrentPlayer.Nickname}[/] has left.".ToAnsi());
+        }
+        return Task.CompletedTask;
     }
+    public string GetCharacterDescriptions(GameSession pc)
+        => string.Join(" ", _players.Where(p => p.Id != pc.Id).Select(p => $"[cyan]{p.CurrentPlayer.Nickname}[/] is here with you."));
 }

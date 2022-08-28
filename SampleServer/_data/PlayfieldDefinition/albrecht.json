@@ -12,12 +12,12 @@
       ],
       "RoomLinks": [
         {
-          "MatchPattern": "(leave|exit|x|w)$",
+          "MatchPattern": "^(leave|exit|x|w|west)$",
           "UniqueId": "exit",
           "LinkedRoomId": "/albrecht/apartment-livingroom",
           "DisplayName": "Door",
           "FullDescription": null,
-          "ShortDescription": "A standard door"
+          "ShortDescription": "A standard door leads [cyan]west[/]."
         }
       ]
     },
@@ -32,12 +32,12 @@
       ],
       "RoomLinks": [
         {
-          "MatchPattern": "(east|e)$",
+          "MatchPattern": "^(east|e)$",
           "UniqueId": "bedroom-door",
           "LinkedRoomId": "/albrecht/apartment-bedroom",
           "DisplayName": "Door",
           "FullDescription": null,
-          "ShortDescription": "A standard door"
+          "ShortDescription": "A standard door leads [cyan]east[/]."
         }
       ]
     }

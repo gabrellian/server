@@ -1,5 +1,10 @@
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+
 public class RoomLink
 {
+    private Regex _matchPatternExpression;
+    [JsonIgnore] public Regex MatchPatternExpression => _matchPatternExpression = _matchPatternExpression ?? new Regex(MatchPattern);
     public string MatchPattern { get; set; }
     public string UniqueId { get; set; }
     public string LinkedRoomId { get; set; }
