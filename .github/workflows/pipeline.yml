@@ -80,4 +80,4 @@ jobs:
           --azure-file-volume-mount-path /aci/data/ \
           --registry-username gabrellian \
           --registry-password ${{secrets.REGISTRY_PASSWORD}} \
-          --environment-variables 'RootStoragePath'='/aci/data'
+          --environment-variables 'RootStoragePath'='/aci/data' 'VersionHash'='${{github.sha}}'
