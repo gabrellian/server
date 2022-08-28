@@ -75,9 +75,9 @@ public class GameSession : TcpSession
                         {
                             sc.OnCommand(cmd).Wait();
                         }
-                        ProcessCommand(cmd);
+                        ProcessCommand(cmd).Wait();
                     }
-                    break;
+                    return;
                 case 32:
                     _buffer.Add(b);
                     break;
@@ -92,12 +92,12 @@ public class GameSession : TcpSession
 
     public virtual void SendPrompt()
     {
-        Send("> ");
+        Send($"({CurrentPlayer.Nickname}): ");
     }
 
-    protected void ProcessCommand(string raw)
+    protected async Task ProcessCommand(string raw)
     {
-        var cmd = GetService<ICommandFactory>().Match(raw, this);
+        var cmd = await GetService<ICommandFactory>().Match(raw, this);
 
         if (CurrentPlayfield != null)
         {
@@ -121,6 +121,10 @@ public class GameSession : TcpSession
     public virtual async Task ChangeRoom(string path)
     {
         var (pf, rm) = await GetService<IPlayfieldService>().GetRoom(path);
+        if (CurrentRoom != null)
+        {
+            await CurrentRoom.RemovePlayer(this);
+        }
         CurrentRoom = rm;
         CurrentPlayfield = pf;
         await rm.AddPlayer(this);
@@ -139,6 +143,11 @@ public class GameSession : TcpSession
 
     public void SendLook() =>
         SendLine(new Table()
+            .Width(80)
             .AddColumn(CurrentRoom.DisplayName)
-            .AddRow(CurrentRoom.FullDescription), showPrompt: true);
+            .AddRow(
+                $"{CurrentRoom.FullDescription} " + 
+                $"{string.Join(" ", CurrentRoom.RoomLinks.Select(l => l.ShortDescription))} " + 
+                $"{CurrentRoom.GetCharacterDescriptions(this)} ")
+                , showPrompt: true);
 }

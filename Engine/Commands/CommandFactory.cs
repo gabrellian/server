@@ -6,7 +6,7 @@ namespace Engine.Commands;
 
 public interface ICommandFactory
 {
-    bool Match(string commandString, GameSession session);
+    Task<bool> Match(string commandString, GameSession session);
 }
 public class CommandFactory : ICommandFactory
 {
@@ -24,8 +24,19 @@ public class CommandFactory : ICommandFactory
         { new Regex(@"^(character|c)$"), typeof(CharacterCommand) }
     };
 
-    public bool Match(string commandString, GameSession session)
+    public async Task<bool> Match(string commandString, GameSession session)
     {
+        if (session.CurrentRoom != null)
+        {
+            foreach (var roomLink in session.CurrentRoom.RoomLinks)
+            {
+                if (roomLink.MatchPatternExpression.IsMatch(commandString))
+                {
+                    await session.ChangeRoom(roomLink.LinkedRoomId);
+                    return true;
+                }
+            }
+        }
         foreach (var matcher in Matchers)
         {
             var commandType = matcher.Value;
@@ -57,7 +68,7 @@ public class CommandFactory : ICommandFactory
                     }
                 }
 
-                command.Handle();
+                await command.Handle();
                 return true;
             }
         }
