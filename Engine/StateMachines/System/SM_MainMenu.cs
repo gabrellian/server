@@ -29,6 +29,8 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
         public Unauthenticated(IConfiguration config, GameSession session) : base(session)
         {
             session.SendLine(new FigletText(config.GetValue<string>("ServerDisplayName", "Welcome")).ToAnsi());
+            var version = config.GetValue<string>("VersionHash", null);
+            if (version != null) session.SendLine($"[underline]Version[/]: {version}");
             session.SendLine(
                 new Table().HideHeaders().AddColumns("", "Description")
                 .AddRow("login", "Log into an existing character")
