@@ -1,0 +1,2 @@
+@page chat
+[Green] Chat System [/]
