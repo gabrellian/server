@@ -8,6 +8,9 @@ using Microsoft.Extensions.Configuration.Json;
 using Engine;
 using Microsoft.Extensions.Hosting;
 using Engine.StateMachines;
+using Engine.Extendable;
+using SampleServer;
+using System.Text.Json;
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureAppConfiguration((ctx, config) => config
@@ -19,8 +22,16 @@ var host = Host.CreateDefaultBuilder()
         .AddSingleton<IPlayfieldDefinitionRepo, FileSystem.PlayfieldDefinitionRepo>()
         .AddSingleton<IHelpFilesRepo, FileSystem.HelpFileRepo>()
         .AddSingleton<GameSessions>()
+        .AddSingleton<ICharacterStatBuilder, CharacterStatBuilder>()
         .AddSingleton<IPlayerCharacterRepo, FileSystem.PlayerCharacterRepo>()
         .AddScoped<WhoCommand>()
+        .AddSingleton(services =>
+        {
+            var jsonOptions = new JsonSerializerOptions();
+            jsonOptions.WriteIndented = true;
+            jsonOptions.Converters.Add(new StatBlockConverter());
+            return jsonOptions;
+        })
         .AddSingleton<SessionInitializer>(serverServices =>
             (session) => new ServiceCollection()
                 .AddSingleton(session)
@@ -32,8 +43,11 @@ var host = Host.CreateDefaultBuilder()
                 .AddTransient<WhoCommand>()
                 .AddTransient<HelpCommand>()
                 .AddTransient<LookCommand>()
+                .AddTransient<IStatCommand, StatCommand>()
                 .AddTransient<SayCommand>()
                 .AddTransient<CharacterCommand>()
+                .AddSingleton<JsonSerializerOptions>(serverServices.GetService<JsonSerializerOptions>())
+                .AddSingleton<ICharacterStatBuilder>(serverServices.GetService<ICharacterStatBuilder>())
                 .AddSingleton<IPlayerCharacterRepo>(serverServices.GetService<IPlayerCharacterRepo>())
                 .AddSingleton<IPlayfieldDefinitionRepo>(serverServices.GetService<IPlayfieldDefinitionRepo>())
                 .AddSingleton<IHelpFilesRepo>(serverServices.GetService<IHelpFilesRepo>())

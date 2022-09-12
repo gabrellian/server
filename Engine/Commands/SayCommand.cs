@@ -3,10 +3,11 @@ using Engine.Net;
 using Spectre.Console;
 using System.Text.RegularExpressions;
 using Spectre.Console.Advanced;
+using Engine.Extendable;
 
 namespace Engine.Commands;
 
-public class SayCommand : BaseCommand
+public class SayCommand : BaseCommand, ISayCommand
 {
     private IPlayfieldService _playfieldService;
 

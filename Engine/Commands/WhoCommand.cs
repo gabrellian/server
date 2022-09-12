@@ -3,10 +3,11 @@ using Engine.Net;
 using Spectre.Console;
 using System.Text.RegularExpressions;
 using Spectre.Console.Advanced;
+using Engine.Extendable;
 
 namespace Engine.Commands;
 
-public class WhoCommand : BaseCommand
+public class WhoCommand : BaseCommand, IWhoCommand
 {
     private IPlayfieldService _playfieldService;
 

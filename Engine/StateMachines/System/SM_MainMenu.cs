@@ -5,6 +5,7 @@ using Data;
 using Data.Models;
 using Spectre.Console;
 using Microsoft.Extensions.Configuration;
+using Engine.Extendable;
 
 namespace Engine.StateMachines;
 
@@ -152,6 +153,7 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
         {
             // Check to see if name is taken .. if not then proceed
             var pcRepo = _session.GetService<IPlayerCharacterRepo>();
+            var statBuilder = _session.GetService<ICharacterStatBuilder>();
             if (rawCommand.Equals("exit", StringComparison.OrdinalIgnoreCase))
             {
                 return new Unauthenticated(_session.GetService<IConfiguration>(), _session);
@@ -164,6 +166,8 @@ public class SM_MainMenu : StatefulContext, IMainMenu, IStatefulContext
             }
 
             _pc.Nickname = rawCommand;
+
+            await statBuilder.Initialize(_pc);
 
             _pc = await pcRepo.SavePlayer(_pc);
 

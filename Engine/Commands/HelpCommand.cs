@@ -1,11 +1,12 @@
 ﻿using Data;
+using Engine.Extendable;
 using Microsoft.Extensions.Configuration;
 using Spectre.Console;
 using System.Text.RegularExpressions;
 
 namespace Engine.Commands;
 
-public class HelpCommand : BaseCommand
+public class HelpCommand : BaseCommand, IHelpCommand
 {
     private IHelpFilesRepo _helpFiles;
 

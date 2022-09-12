@@ -11,26 +11,30 @@ namespace Data.FileSystem;
 public abstract class FileSystemRepo<TModel, TKey> where TModel : class
 {
     private PropertyInfo _keyProperty;
+    protected JsonSerializerOptions _jsonOptions;
+
     public string RootStoragePath { get; set; }
     public virtual string ModelStoragePath => Path.Combine(RootStoragePath, typeof(TModel).Name);
-    public FileSystemRepo(IConfiguration config)
+    public FileSystemRepo(IConfiguration config, JsonSerializerOptions jsonOptions = null)
     {
+        _jsonOptions = jsonOptions;
         RootStoragePath = config.GetValue<string>(nameof(RootStoragePath), "./_data");
         Initialize();
     }
     protected virtual string Serialize(TModel model)
     {
-        return JsonSerializer.Serialize(model, new JsonSerializerOptions()
+        return JsonSerializer.Serialize(model, _jsonOptions ?? new JsonSerializerOptions()
         {
             WriteIndented = true
         });
     }
     protected virtual TModel Deserialize(string raw)
     {
-        return JsonSerializer.Deserialize(raw, typeof(TModel), new JsonSerializerOptions()
+        var x =  JsonSerializer.Deserialize(raw, typeof(TModel), _jsonOptions ?? new JsonSerializerOptions()
         {
             WriteIndented = true
         }) as TModel;
+        return x;
     }
 
     protected virtual TKey GetNextKey() => throw new NotImplementedException();

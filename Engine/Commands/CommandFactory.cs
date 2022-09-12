@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Engine.Extendable;
 using Engine.Net;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,7 +23,10 @@ public class CommandFactory : ICommandFactory
         { new Regex(@"^(look|l)$"), typeof(LookCommand) },
         { new Regex(@"^(help|h)"), typeof(HelpCommand) },
         { new Regex(@"^(say|sl|global|sg)"), typeof(SayCommand) },
-        { new Regex(@"^(character|c)$"), typeof(CharacterCommand) }
+        { new Regex(@"^(character|c)$"), typeof(CharacterCommand) },
+        { new Regex(@"^(character|c)\sjson$"), typeof(CharacterCommand) },
+        { new Regex(@"^(stat|st|stats)$"), typeof(IStatCommand) },
+        { new Regex(@"^(stat|st|stats)\s(?<Stat>.*)$"), typeof(IStatCommand) }
     };
 
     public async Task<bool> Match(string commandString, GameSession session)

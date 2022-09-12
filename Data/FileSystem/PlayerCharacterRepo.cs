@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using Data.Models;
 using Microsoft.Extensions.Configuration;
 
@@ -7,7 +8,11 @@ namespace Data.FileSystem;
 public class PlayerCharacterRepo : FileSystemRepo<PlayerCharacter, string>, IPlayerCharacterRepo
 {
     private Regex _badCharactersMatch = new Regex("[^A-Za-z0-9\x20']");
-    public PlayerCharacterRepo(IConfiguration config) : base(config) { }
+    public PlayerCharacterRepo(IConfiguration config, JsonSerializerOptions jsonOptions) : base(config, jsonOptions)
+    {
+        if (jsonOptions == null)
+            throw new ArgumentNullException($"Player character repository requires a pre-configured set of JsonSerializerOptions!");
+    }
 
     public Task<PlayerCharacter> GetPlayer(string nickname) => Get(p => p.Nickname.ToLower() == nickname.ToLower());
 

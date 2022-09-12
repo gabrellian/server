@@ -1,8 +1,9 @@
+using Engine.Extendable;
 using Spectre.Console;
 
 namespace Engine.Commands;
 
-public class LookCommand : BaseCommand
+public class LookCommand : BaseCommand, ILookCommand
 {
     private IPlayfieldService _playfieldService;
 
